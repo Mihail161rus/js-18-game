@@ -67,3 +67,12 @@ class Actor {
         }
     }
 }
+
+class Level {
+    constructor(grid, actor) {
+        if (Array.isArray(grid)) {
+            this.grid = grid;
+            this.height = grid.length;
+        }
+    }
+}
