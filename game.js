@@ -69,10 +69,60 @@ class Actor {
 }
 
 class Level {
-    constructor(grid, actor) {
+    constructor(grid, actors) {
         if (Array.isArray(grid)) {
             this.grid = grid;
             this.height = grid.length;
+            this.width = grid.reduce((memo, el) => {
+                if (memo <= el.length) {
+                    return el.length;
+            }
+            }, 0);
+        } else {
+            [this.height, this.width] = [0, 0];
+            this.grid = [];
         }
+
+        if (!Array.isArray(actors)) actors = [];
+        this.actors = actors;
+        this.player = actors.find(el => el.type === 'player');
+
+        this.status = null;
+        this.finishDelay = 1;
+    }
+
+    isFinished() {
+        return this.status !== null && this.finishDelay < 0;
+    }
+
+    actorAt(actor) {
+        if (!(actor instanceof Actor)) {
+            throw new Error(`Переданный параметр ${actor} не является экземпляром класса Actor`);
+        }
+
+        return this.actors.find(el => el.isIntersect(actor));
+    }
+
+    obstacleAt(position, size) {
+        if (!(position instanceof Vector && size instanceof Vector)) {
+            throw new Error(`Переданные параметры ${[position, size]} не являются экземплярами класса Vector`);
+        }
+
+        let actor = new Actor(position, size);
+
+        if (actor.left < 0 || actor.right > this.width || actor.top < 0) return 'wall';
+        if (actor.bottom > this.height) return 'lava';
+
+        for (let col = Math.floor(actor.top); col < Math.ceil(actor.bottom); col++) {
+            for (let row = Math.floor(actor.left); row < Math.ceil(actor.right); row++) {
+                if (this.grid[col][row] !== undefined) {
+                    return this.grid[col][row];
+                }
+            }
+        }
+    }
+
+    removeActor(actor) {
+        
     }
 }
