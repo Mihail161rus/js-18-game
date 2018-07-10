@@ -123,6 +123,26 @@ class Level {
     }
 
     removeActor(actor) {
-        
+        let actorIndex = this.actors.findIndex(el => el === actor);
+
+        if (actorIndex !== -1) {
+            this.actors.splice(actorIndex, 1);
+        }
+    }
+
+    noMoreActors(type) {
+        return (this.actors.length === 0) || (this.actors.findIndex(el => el.type === type) === -1);
+    }
+
+    playerTouched(actorType, actor) {
+        if (actorType === 'lava' || actorType === 'fireball') {
+            this.status = 'lost';
+        } else if (actorType === 'coin' && actor !== undefined) {
+            this.removeActor(actor);
+        }
+
+        if (this.noMoreActors('coin')) {
+            this.status = 'won';
+        }
     }
 }
