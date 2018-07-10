@@ -137,12 +137,51 @@ class Level {
     playerTouched(actorType, actor) {
         if (actorType === 'lava' || actorType === 'fireball') {
             this.status = 'lost';
-        } else if (actorType === 'coin' && actor !== undefined) {
+            return;
+        }
+
+        if (actorType === 'coin' && actor !== undefined) {
             this.removeActor(actor);
         }
 
         if (this.noMoreActors('coin')) {
             this.status = 'won';
         }
+    }
+}
+
+class LevelParser {
+    constructor(dictionary) {
+        this.dictionary = dictionary;
+        this.objDictionary = {
+            'x': 'wall',
+            '!': 'lava'
+        };
+    }
+
+    actorFromSymbol(char) {
+        if (char !== undefined) {
+            return this.dictionary[char];
+        }
+    }
+
+    obstacleFromSymbol(char) {
+        if (char !== undefined) {
+            return this.objDictionary[char];
+        }
+    }
+
+    createGrid(grid) {
+        grid = [].concat(grid).filter(Boolean);
+
+        return grid.map(row => {
+            return row.split('').map(cell => {
+                return this.objDictionary[cell];
+            });
+        });
+    }
+
+    createActors(plan) {
+
     }
 }
