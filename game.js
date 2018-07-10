@@ -182,6 +182,57 @@ class LevelParser {
     }
 
     createActors(plan) {
+        let actors = [];
 
+        plan = [].concat(plan).filter(Boolean);
+
+        if (plan.length > 0 && this.dictionary !== undefined) {
+            plan.reduce((rowMemo, row, rowIndex) => {
+                row.split('').reduce((cellMemo, cell, cellIndex) => {
+                    if (this.dictionary[cell] === Actor || this.dictionary[cell] !== undefined && this.dictionary[cell].prototype instanceof Actor) {
+                        actors.push(new this.dictionary[cell] (new Vector(cellIndex, rowIndex)));
+                    }
+                }, []);
+            }, []);
+        }
+
+        return actors;
+    }
+
+    parse(plan) {
+        return new Level(this.createGrid(plan), this.createActors(plan));
+    }
+}
+
+class Fireball extends Actor {
+    constructor(pos, speed) {
+        super(pos, undefined,speed);
+    }
+
+    get type() {
+        return 'fireball';
+    }
+
+    getNextPosition(time = 1) {
+        if (this.speed.x === 0 && this.speed.y === 0) {
+            return this.pos;
+        } else {
+            return new Vector(this.pos.x + (this.speed.x * time), this.pos.y + (this.speed.y * time));
+        }
+    }
+
+    handleObstacle() {
+        this.speed.x = -this.speed.x;
+        this.speed.y = -this.speed.y;
+    }
+
+    act(time, level) {
+        let nextPosition = this.getNextPosition(time);
+
+        if (level.obstacleAt(nextPosition, this.size) === undefined) {
+            this.pos = nextPosition;
+        } else {
+            this.handleObstacle();
+        }
     }
 }
