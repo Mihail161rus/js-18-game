@@ -248,3 +248,99 @@ class VerticalFireball extends Fireball {
         super(pos, new Vector(0, 2));
     }
 }
+
+class FireRain extends Fireball {
+    constructor(pos) {
+        super(pos, new Vector(0, 3));
+
+        if (pos !== undefined) {
+            this.startPosition = new Vector(pos.x, pos.y);
+        }
+    }
+
+    handleObstacle() {
+        if (this.startPosition !== undefined) {
+            this.pos.x = this.startPosition.x;
+            this.pos.y = this.startPosition.y;
+        }
+    }
+}
+
+class Coin extends Actor {
+    constructor(pos) {
+        super(pos, new Vector(0.6, 0.6), undefined);
+
+        this.pos = this.pos.plus(new Vector(0.2, 0.1));
+        this.startPosition = this.pos;
+        this.spring = Math.random() *2 * Math.PI;
+        this.springSpeed = 8;
+        this.springDist = 0.07;
+    }
+
+    get type() {
+        return 'coin';
+    }
+
+    updateSpring(time = 1) {
+        this.spring += this.springSpeed * time;
+    }
+
+    getSpringVector() {
+        return new Vector(0, Math.sin(this.spring) * this.springDist);
+    }
+
+    getNextPosition(time = 1) {
+        this.updateSpring(time);
+        return this.startPosition.plus(this.getSpringVector());
+    }
+
+    act(time) {
+        this.pos = this.getNextPosition(time);
+    }
+}
+
+class Player extends Actor {
+    constructor(pos) {
+        if (pos !== undefined) {
+            pos = pos.plus(new Vector(0, -0.5));
+        }
+        super (pos,new Vector(0.8, 1.5), new Vector(0, 0));
+    }
+
+    get type() {
+        return 'player';
+    }
+}
+
+const schemas = [
+    [
+        '         ',
+        '         ',
+        '    =    ',
+        '       o ',
+        '     !xxx',
+        ' @       ',
+        'xxx!     ',
+        '         '
+    ],
+    [
+        '      v  ',
+        '    v    ',
+        '  v      ',
+        '        o',
+        '        x',
+        '@   x    ',
+        'x        ',
+        '         '
+    ]
+];
+const actorDict = {
+    '@': Player,
+    'v': FireRain,
+    '=': HorizontalFireball,
+    '|': VerticalFireball,
+    'o': Coin
+}
+const parser = new LevelParser(actorDict);
+runGame(schemas, parser, DOMDisplay)
+    .then(() => console.log('Вы выиграли приз!'));
