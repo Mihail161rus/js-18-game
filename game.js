@@ -20,12 +20,14 @@ class Vector {
 }
 
 class Actor {
+    // аргументы класса Vector лучше не опускать, кто-то может изменить значения по умолчанию и всё сломается
     constructor(position = new Vector(), size = new Vector(1, 1), speed = new Vector()) {
         if (position instanceof Vector && size instanceof Vector && speed instanceof Vector) {
             this.pos = position;
             this.size = size;
             this.speed = speed;
         } else {
+            // лучше сначала делать проверку, а потом писать основной код
             throw new Error(`Один или несколько аргументов ${[position, size, speed]} не принадлежат классу Actor`);
         }
     }
@@ -61,7 +63,11 @@ class Actor {
 
         if (actor === this) {
             return false;
+        // тут не нужен else, если зайдёт в if, то выполнение метода прекратиться
         } else {
+            // отрицание можно внести в скобки если заменить || на &&
+            // и операторы на противоположные
+            // >= на <, а <= на >
             return !(this.top >= actor.bottom || this.bottom <= actor.top
                 || this.right <= actor.left || this.left >= actor.right);
         }
@@ -70,6 +76,8 @@ class Actor {
 
 class Level {
     constructor(grid, actors) {
+        // лучше добавьте значения по-умолчанию для аргументов
+        // и уберите эти проверки
         if (Array.isArray(grid)) {
             this.grid = grid;
             this.height = grid.length;
@@ -79,6 +87,7 @@ class Level {
             }
             }, 0);
         } else {
+            // не усложняйте ко там, где это не нужно
             [this.height, this.width] = [0, 0];
             this.grid = [];
         }
@@ -108,11 +117,18 @@ class Level {
             throw new Error(`Переданные параметры ${[position, size]} не являются экземплярами класса Vector`);
         }
 
+        // значение присваивается переменной один раз - лучше использовать const
+        // а вообще тут не нужно создавать объект,
+        // потому что он используется только для того,
+        // чтобы сложить несколько чисел
         let actor = new Actor(position, size);
 
+        // не опускайте фигурные скобки у if
         if (actor.left < 0 || actor.right > this.width || actor.top < 0) return 'wall';
         if (actor.bottom > this.height) return 'lava';
 
+        //  лучше сохранить округлённые значения в переменных,
+        // чтобы не округлять на кажждой итерации
         for (let col = Math.floor(actor.top); col < Math.ceil(actor.bottom); col++) {
             for (let row = Math.floor(actor.left); row < Math.ceil(actor.right); row++) {
                 if (this.grid[col][row] !== undefined) {
@@ -131,6 +147,7 @@ class Level {
     }
 
     noMoreActors(type) {
+        // тут лучше использовать метод some
         return (this.actors.length === 0) || (this.actors.findIndex(el => el.type === type) === -1);
     }
 
@@ -160,20 +177,25 @@ class LevelParser {
     }
 
     actorFromSymbol(char) {
+        // если убрать проверку, то ничего не изменится
         if (char !== undefined) {
             return this.dictionary[char];
         }
     }
 
     obstacleFromSymbol(char) {
+        // проверка лишняя
         if (char !== undefined) {
             return this.objDictionary[char];
         }
     }
 
     createGrid(grid) {
+        // лучше не модифицировать фргументы функции
+        // непонятно зачем тут этот непонятный код :)
         grid = [].concat(grid).filter(Boolean);
 
+        // можно использовать сокращённую форму записи стрелочных функций
         return grid.map(row => {
             return row.split('').map(cell => {
                 return this.objDictionary[cell];
@@ -182,13 +204,24 @@ class LevelParser {
     }
 
     createActors(plan) {
+        // const
         let actors = [];
 
+        // лишний код
         plan = [].concat(plan).filter(Boolean);
 
+        // добавьте значение по-умолчанию для dictionary
+        // в конструкторе и проверка станет лишней
         if (plan.length > 0 && this.dictionary !== undefined) {
+            // зачем reduce, если вы не используете rowMemo?
             plan.reduce((rowMemo, row, rowIndex) => {
+                // cellMemo тоже не используется
                 row.split('').reduce((cellMemo, cell, cellIndex) => {
+                    // this.dictionary[cell] лучше записать в переменную,
+                    // чтобы не писать одно и то же
+                    // тут достаточно проверить, что this.dictionary[cell]
+                    // это функция, а потом, то, что созданный объект
+                    // является экземпляром класса Actor
                     if (this.dictionary[cell] === Actor || this.dictionary[cell] !== undefined && this.dictionary[cell].prototype instanceof Actor) {
                         actors.push(new this.dictionary[cell] (new Vector(cellIndex, rowIndex)));
                     }
@@ -205,7 +238,9 @@ class LevelParser {
 }
 
 class Fireball extends Actor {
+    // лучше добавить значения по-умолчанию
     constructor(pos, speed) {
+        // второй аргумент неправильный, размер огненного шара нам известен
         super(pos, undefined,speed);
     }
 
@@ -214,14 +249,17 @@ class Fireball extends Actor {
     }
 
     getNextPosition(time = 1) {
+        // это лишняя проверка
         if (this.speed.x === 0 && this.speed.y === 0) {
             return this.pos;
         } else {
+            // здесь нужно использовать методы класса Vector
             return new Vector(this.pos.x + (this.speed.x * time), this.pos.y + (this.speed.y * time));
         }
     }
 
     handleObstacle() {
+        // здесь нужно использовать методы класса Vector
         this.speed.x = -this.speed.x;
         this.speed.y = -this.speed.y;
     }
@@ -229,6 +267,7 @@ class Fireball extends Actor {
     act(time, level) {
         let nextPosition = this.getNextPosition(time);
 
+        // можно убрать === undefined
         if (level.obstacleAt(nextPosition, this.size) === undefined) {
             this.pos = nextPosition;
         } else {
@@ -238,28 +277,35 @@ class Fireball extends Actor {
 }
 
 class HorizontalFireball extends Fireball {
+    // лучше добавить значение по-умолчанию
     constructor(pos) {
         super(pos, new Vector(2, 0));
     }
 }
 
 class VerticalFireball extends Fireball {
+    // лучше добавить значение по-умолчанию
     constructor(pos) {
         super(pos, new Vector(0, 2));
     }
 }
 
 class FireRain extends Fireball {
+    // лучше добавить значение по-умолчанию
     constructor(pos) {
         super(pos, new Vector(0, 3));
-
+        // проверка лишняя
         if (pos !== undefined) {
+            // можно не создавать новый вектор
             this.startPosition = new Vector(pos.x, pos.y);
         }
     }
 
     handleObstacle() {
+        // проверка лишняя
         if (this.startPosition !== undefined) {
+            // не нужно мутировать объекты типа Vector
+            // это может прривести к ошибкам, которые будет сложно отследить
             this.pos.x = this.startPosition.x;
             this.pos.y = this.startPosition.y;
         }
@@ -267,9 +313,12 @@ class FireRain extends Fireball {
 }
 
 class Coin extends Actor {
+    // лучше добавить значение по-умолчанию
     constructor(pos) {
+        // третий аргумент некорректный
         super(pos, new Vector(0.6, 0.6), undefined);
 
+        // pos лучше задавать через вызов родительского конструктора
         this.pos = this.pos.plus(new Vector(0.2, 0.1));
         this.startPosition = this.pos;
         this.spring = Math.random() *2 * Math.PI;
@@ -300,8 +349,11 @@ class Coin extends Actor {
 }
 
 class Player extends Actor {
+    // значение по умолчанию
     constructor(pos) {
+        // проверка лишняя
         if (pos !== undefined) {
+            // аргументы лучше не менять
             pos = pos.plus(new Vector(0, -0.5));
         }
         super (pos,new Vector(0.8, 1.5), new Vector(0, 0));
@@ -312,6 +364,7 @@ class Player extends Actor {
     }
 }
 
+// было бы здорово, если бы вы загрузили уровни через loadLevels
 const schemas = [
     [
         '         ',
@@ -340,7 +393,7 @@ const actorDict = {
     '=': HorizontalFireball,
     '|': VerticalFireball,
     'o': Coin
-}
+} // точка с запятой
 const parser = new LevelParser(actorDict);
 runGame(schemas, parser, DOMDisplay)
     .then(() => console.log('Вы выиграли приз!'));
