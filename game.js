@@ -20,15 +20,13 @@ class Vector {
 }
 
 class Actor {
-    // аргументы класса Vector лучше не опускать, кто-то может изменить значения по умолчанию и всё сломается
-    constructor(position = new Vector(), size = new Vector(1, 1), speed = new Vector()) {
-        if (position instanceof Vector && size instanceof Vector && speed instanceof Vector) {
+    constructor(position = new Vector(0, 0), size = new Vector(1, 1), speed = new Vector(0, 0)) {
+        if (!position instanceof Vector && size instanceof Vector && speed instanceof Vector) {
+            throw new Error(`Один или несколько аргументов ${[position, size, speed]} не принадлежат классу Actor`);
+        } else {
             this.pos = position;
             this.size = size;
             this.speed = speed;
-        } else {
-            // лучше сначала делать проверку, а потом писать основной код
-            throw new Error(`Один или несколько аргументов ${[position, size, speed]} не принадлежат классу Actor`);
         }
     }
 
@@ -63,14 +61,10 @@ class Actor {
 
         if (actor === this) {
             return false;
-        // тут не нужен else, если зайдёт в if, то выполнение метода прекратиться
-        } else {
-            // отрицание можно внести в скобки если заменить || на &&
-            // и операторы на противоположные
-            // >= на <, а <= на >
-            return !(this.top >= actor.bottom || this.bottom <= actor.top
-                || this.right <= actor.left || this.left >= actor.right);
         }
+
+        return (!this.top < actor.bottom && this.bottom > actor.top
+                && this.right > actor.left && this.left < actor.right);
     }
 }
 
@@ -84,7 +78,7 @@ class Level {
             this.width = grid.reduce((memo, el) => {
                 if (memo <= el.length) {
                     return el.length;
-            }
+                }
             }, 0);
         } else {
             // не усложняйте ко там, где это не нужно
