@@ -22,7 +22,7 @@ class Vector {
 class Actor {
   constructor(position = new Vector(0, 0), size = new Vector(1, 1), speed = new Vector(0, 0)) {
     if (!(position instanceof Vector && size instanceof Vector && speed instanceof Vector)) {
-      throw new Error(`Один или несколько аргументов ${[position, size, speed]} не принадлежат классу Actor`);
+      throw new Error('Переданные аргументы не являются экземплярами класса Actor');
     }
 
     this.pos = position;
@@ -56,7 +56,7 @@ class Actor {
 
   isIntersect(actor = new Actor()) {
     if (!(actor instanceof Actor)) {
-      throw new Error(`Переданный параметр ${actor} не является экземпляром класса Actor`);
+      throw new Error('Переданный аргумент не является экземпляром класса Actor');
     }
 
     if (actor === this) {
@@ -87,7 +87,7 @@ class Level {
 
   actorAt(actor) {
     if (!(actor instanceof Actor)) {
-      throw new Error(`Переданный параметр actor не является экземпляром класса Actor`);
+      throw new Error('Переданный аргумент не является экземпляром класса Actor');
     }
 
     return this.actors.find(el => el.isIntersect(actor));
@@ -95,7 +95,7 @@ class Level {
 
   obstacleAt(position, size) {
     if (!(position instanceof Vector && size instanceof Vector)) {
-      throw new Error(`Переданные параметры position и size не являются экземплярами класса Vector`);
+      throw new Error('Переданные аргументы не являются экземплярами класса Vector');
     }
 
     const posTop = Math.floor(position.y);
