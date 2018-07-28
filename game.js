@@ -23,11 +23,11 @@ class Actor {
   constructor(position = new Vector(0, 0), size = new Vector(1, 1), speed = new Vector(0, 0)) {
     if (!(position instanceof Vector && size instanceof Vector && speed instanceof Vector)) {
       throw new Error(`Один или несколько аргументов ${[position, size, speed]} не принадлежат классу Actor`);
-    } else {
-      this.pos = position;
-      this.size = size;
-      this.speed = speed;
     }
+
+    this.pos = position;
+    this.size = size;
+    this.speed = speed;
   }
 
   act() {
@@ -63,23 +63,19 @@ class Actor {
       return false;
     }
 
-    return (this.top < actor.bottom && this.bottom > actor.top
-      && this.right > actor.left && this.left < actor.right);
+    return this.top < actor.bottom && this.bottom > actor.top
+      && this.right > actor.left && this.left < actor.right;
   }
 }
 
 class Level {
   constructor(grid = [], actors = []) {
-    this.grid = grid;
-    this.height = grid.length;
-    this.width = grid.reduce((memo, el) => {
-      if (memo <= el.length) {
-        return el.length;
-      }
-    }, 0);
+    this.grid = grid.slice();
+    this.height = this.grid.length;
+    this.width = this.grid.reduce((memo, el) => (memo <= el.length) ? el.length : '', 0);
 
-    this.actors = actors;
-    this.player = actors.find(el => el.type === 'player');
+    this.actors = actors.slice();
+    this.player = this.actors.find(el => el.type === 'player');
 
     this.status = null;
     this.finishDelay = 1;
@@ -91,7 +87,7 @@ class Level {
 
   actorAt(actor) {
     if (!(actor instanceof Actor)) {
-      throw new Error(`Переданный параметр ${actor} не является экземпляром класса Actor`);
+      throw new Error(`Переданный параметр actor не является экземпляром класса Actor`);
     }
 
     return this.actors.find(el => el.isIntersect(actor));
@@ -99,7 +95,7 @@ class Level {
 
   obstacleAt(position, size) {
     if (!(position instanceof Vector && size instanceof Vector)) {
-      throw new Error(`Переданные параметры ${[position, size]} не являются экземплярами класса Vector`);
+      throw new Error(`Переданные параметры position и size не являются экземплярами класса Vector`);
     }
 
     const posTop = Math.floor(position.y);
@@ -117,8 +113,9 @@ class Level {
 
     for (let col = posTop; col < posBottom; col++) {
       for (let row = posLeft; row < posRight; row++) {
-        if (this.grid[col][row] !== undefined) {
-          return this.grid[col][row];
+        const cell = this.grid[col][row];
+        if (cell) {
+          return cell;
         }
       }
     }
@@ -142,7 +139,7 @@ class Level {
       return;
     }
 
-    if (actorType === 'coin' && actor !== undefined) {
+    if (actorType === 'coin') {
       this.removeActor(actor);
     }
 
@@ -154,7 +151,7 @@ class Level {
 
 class LevelParser {
   constructor(dictionary = {}) {
-    this.dictionary = dictionary;
+    this.dictionary = Object.assign({}, dictionary);
     this.objDictionary = {
       'x': 'wall',
       '!': 'lava'
@@ -170,27 +167,25 @@ class LevelParser {
   }
 
   createGrid(grid) {
-    return grid.map(row => row.split('').map(cell => this.objDictionary[cell]));
+    return grid.map(row => row.split('').map(cell => this.obstacleFromSymbol(cell)));
   }
 
   createActors(plan) {
     const actors = [];
 
-    if (plan.length > 0) {
-      plan.forEach((row, rowIndex) => {
-        row.split('').forEach((cell, cellIndex) => {
-          const createActor = this.dictionary[cell];
+    plan.forEach((row, rowIndex) => {
+      row.split('').forEach((cell, cellIndex) => {
+        const createActor = this.actorFromSymbol(cell);
 
-          if (typeof createActor === 'function') {
-            const actorObj = new createActor(new Vector(cellIndex, rowIndex));
+        if (typeof createActor === 'function') {
+          const actorObj = new createActor(new Vector(cellIndex, rowIndex));
 
-            if (actorObj instanceof Actor) {
-              actors.push(actorObj);
-            }
+          if (actorObj instanceof Actor) {
+            actors.push(actorObj);
           }
-        });
+        }
       });
-    }
+    });
 
     return actors;
   }
